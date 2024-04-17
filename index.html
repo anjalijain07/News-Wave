@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Wave | News Application</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav>
+        <div class="main-nav container flex">
+            <a href="#" class="logo"><img src="https://play-lh.googleusercontent.com/TN-F52lZPquVRr57oITWkWGZ9_frQ8IDnb4s4TDUNvTX4hv7g53TRgbvTvn4oJ1xpUOR"
+                    alt="News Wave"></a>
+                    <div id="google_translate_element"></div> 
+            <div class="nav-links">
+                <ul class="flex">
+                    <li class="hover-link nav-items" id="cricket" onclick="onNavItemClick('cricket')">Cricket</li>
+                    <li class="hover-link nav-items" id="finance" onclick="onNavItemClick('finance')">Finance</li>
+                    <li class="hover-link nav-items" id="politics" onclick="onNavItemClick('politics')">Politics</li>
+                    <li class="hover-link nav-items" id="technology" onclick="onNavItemClick('technology')">Technology
+                    </li>
+                </ul>
+            </div>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+            <div class="search-bar flex">
+
+                <form>
+                    <input type="text" class="news-input" id="speechToText" placeholder="please Speak to type" onclick="record()">
+                    
+
+                    <button class="search-button" type="button"><i class="fas fa-microphone">Search</button>
+                  
+   
+  </form>
+  <p class="info"></p>
+</div>
+    <div id="output"></div>
+
+                </form>
+            </div>
+        </div>
+    </nav>
+    <main>
+        <div class="cards-container container flex" id="cards-container">
+            
+        </div>
+    </main>
+    <template id="template-news-card">
+        <div class="card">
+            <div class="card-header">
+                <img src="https://via.placeholder.com/400x200" alt="News Image" id="news-image">
+            </div>
+            <div class="card-content">
+                <h3 id="news-title">This Is The Title</h3>
+                <h5 id="news-author">Author</h5>
+                <h6 class="news-source" id="news-source">End Gadget 03/03/2024</h6>
+                <p class="news-desc" id="news-desc">Lorem ipsum dolor sit amet consectetur adipisicing elit. Alias quasi
+                    quibusdam blanditiis. Eveniet pariatur illo quas atque eligendi nostrum perferendis.</p>
+            </div>
+        </div>
+    </template>
+</body>
+<script src="app.js"></script>
+<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script src="app.js"></script>
+<script>
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement(
+            {pageLanguage: 'en'},
+            'google_translate_element'
+        );
+    } 
+
+    const hamburger = document.querySelector(".hamburger");
+    const navItems = document.querySelector(".nav-links .flex");
+
+    hamburger.addEventListener("click", () => {
+        hamburger.classList.toggle("active");
+        navItems.classList.toggle("active");
+    });
+    const startButton = document.getElementById('startButton');
+const outputDiv = document.getElementById('output');
+
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
+recognition.lang = 'en-US';
+
+recognition.onstart = () => {
+    startButton.textContent = 'Listening...';
+};
+
+recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    outputDiv.textContent = transcript;
+};
+
+recognition.onend = () => {
+    startButton.textContent = 'Start Voice Input';
+};
+
+startButton.addEventListener('click', () => {
+    recognition.start();
+});
+const searchForm = document.querySelector("#search-form");
+const searchFormInput = searchForm.querySelector("input"); // <=> document.querySelector("#search-form input");
+const info = document.querySelector(".info");
+
+// The speech recognition interface lives on the browser’s window object
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; // if none exists -> undefined
+
+if(SpeechRecognition) {
+  console.log("Your Browser supports speech Recognition");
+  
+  const recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  // recognition.lang = "en-US";
+
+  searchForm.insertAdjacentHTML("beforeend", '<button type="button"><i class="fas fa-microphone"></i></button>');
+  searchFormInput.style.paddingRight = "50px";
+
+  const micBtn = searchForm.querySelector("button");
+  const micIcon = micBtn.firstElementChild;
+
+  micBtn.addEventListener("click", micBtnClick);
+  function micBtnClick() {
+    if(micIcon.classList.contains("fa-microphone")) { // Start Voice Recognition
+      recognition.start(); // First time you have to allow access to mic!
+    }
+    else {
+      recognition.stop();
+    }
+  }
+
+  recognition.addEventListener("start", startSpeechRecognition); // <=> recognition.onstart = function() {...}
+  function startSpeechRecognition() {
+    micIcon.classList.remove("fa-microphone");
+    micIcon.classList.add("fa-microphone-slash");
+    searchFormInput.focus();
+    console.log("Voice activated, SPEAK");
+  }
+
+  recognition.addEventListener("end", endSpeechRecognition); // <=> recognition.onend = function() {...}
+  function endSpeechRecognition() {
+    micIcon.classList.remove("fa-microphone-slash");
+    micIcon.classList.add("fa-microphone");
+    searchFormInput.focus();
+    console.log("Speech recognition service disconnected");
+  }
+
+  recognition.addEventListener("result", resultOfSpeechRecognition); // <=> recognition.onresult = function(event) {...} - Fires when you stop talking
+  function resultOfSpeechRecognition(event) {
+    const current = event.resultIndex;
+    const transcript = event.results[current][0].transcript;
+    
+    if(transcript.toLowerCase().trim()==="stop recording") {
+      recognition.stop();
+    }
+    else if(!searchFormInput.value) {
+      searchFormInput.value = transcript;
+    }
+    else {
+      if(transcript.toLowerCase().trim()==="go") {
+        searchForm.submit();
+      }
+      else if(transcript.toLowerCase().trim()==="reset input") {
+        searchFormInput.value = "";
+      }
+      else {
+        searchFormInput.value = transcript;
+      }
+    }
+    // searchFormInput.value = transcript;
+    // searchFormInput.focus();
+    // setTimeout(() => {
+    //   searchForm.submit();
+    // }, 500);
+  }
+  
+  info.textContent = 'Voice Commands: "stop recording", "reset input", "go"';
+  
+}
+else {
+  console.log("Your Browser does not support speech Recognition");
+  info.textContent = "Your Browser does not support Speech Recognition";
+}
+function record()
+{
+  var recognition = new webkitSpeechRecognition();
+  recognition.lang = "en-GB";
+  
+  recognition.onresult = function(event)
+  {
+    document.getElementById("speechToText").value=event.results[0][0].transcript;
+  }
+  recognition.start();
+}
+
+</script>
+
+</html>
